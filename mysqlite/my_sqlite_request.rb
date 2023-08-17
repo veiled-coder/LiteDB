@@ -65,38 +65,36 @@ def run
                         end
                     end
                 end
-            process_row(current_row, result_hash, @filtered_hash_array, @columns)if @all_conditions_met
-            end
+            process_row(current_row, result_hash, @filtered_hash_array, @columns)if @all_conditions_met  
+        end
 
     end #end of table loop
-        puts @result_hash_array.inspect
-        # @result_hash_array=@filtered_hash_array
-        puts '...................filtered'
-        puts @filtered_hash_array
-    end #of request='select'
-    
-    # puts @filtered_hash_array.inspect
+        
+ end #of request='select'
+    puts ".......................filtered............"
+    puts @filtered_hash_array.inspect
 
-    # if @isJoin 
-    #     @result_hash_array.each do |rowA|
-    #     @hashedDataB.each do |rowB|
-    #       if rowB[@column_on_db_b] == rowA[@column_on_db_a]
-    #         merged = rowA.merge(rowB)
-    #         @joined_hash_array<<merged
-    #       end
-    #     end
-    #   end  
-    #    @result_hash_array=@joined_hash_array
-    # end     
-     
-# puts @result_hash_array.inspect 
+    if @isJoin 
+        @result_hash_array.each do |rowA|
+        @hashedDataB.each do |rowB|
+          if rowB[@column_on_db_b] == rowA[@column_on_db_a]
+            merged = rowA.merge(rowB)
+            @joined_hash_array<<merged
+          end
+        end
+      end  
+       @result_hash_array=@joined_hash_array
+    end     
+    puts ".......................general............"
+    puts @result_hash_array.inspect 
+
 end#of def run
 end#of class
 
 #HELPER FUNCTIONS
 
 def table_to_hashed(table_name)
-hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h).take(3)
+hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h).take(55)
 return hashedData
 end
 
@@ -126,8 +124,8 @@ end
 
 request = MySqliteRequest.new
 request = request.from('nba_player_data.csv')
-request = request.select('name','year_start','college')
+request = request.select('name','college')
 request = request.where('college', 'University of California')
-# request = request.where('year_start', '1997')
+request = request.where('year_start', '1997')
 # request =request.join('college','nba_players.csv','college')
 request.run
