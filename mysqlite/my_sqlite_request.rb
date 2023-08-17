@@ -44,6 +44,7 @@ def run
     @result_hash_array=[] 
     @joined_hash_array=[]
     @filtered_hash_array=[]
+    @final=[]
     
         
     #convert table data in CSV::Row to a HashedData
@@ -54,6 +55,7 @@ def run
             @all_conditions_met=true;
 
             process_row(current_row, result_hash, @result_hash_array, @columns)
+            @final=@result_hash_array
         
 
             if @isWhere                
@@ -66,14 +68,13 @@ def run
                     end
                 end
             process_row(current_row, result_hash, @filtered_hash_array, @columns)if @all_conditions_met  
+            @final=@filtered_hash_array
         end
 
     end #end of table loop
         
  end #of request='select'
-    puts ".......................filtered............"
-    puts @filtered_hash_array.inspect
-
+    
     if @isJoin 
         @result_hash_array.each do |rowA|
         @hashedDataB.each do |rowB|
@@ -83,10 +84,10 @@ def run
           end
         end
       end  
-       @result_hash_array=@joined_hash_array
+       @final=@joined_hash_array
     end     
-    puts ".......................general............"
-    puts @result_hash_array.inspect 
+    puts ".......................final............"
+    puts @final.inspect 
 
 end#of def run
 end#of class
@@ -111,20 +112,10 @@ def process_row(row,result_hash, result_hash_array,columns)
     result_hash_array << result_hash if result_hash != {}
 end
 
-# request = MySqliteRequest.new
-# request = request.from('nba_player_data.csv')
-# request = request.select('name')
-# request.run
-
-# request = MySqliteRequest.new
-# request = request.from('nba_player_data.csv')
-# request = request.select('name','college')
-# request = request.where('college', 'University of California')
-# request.run
 
 request = MySqliteRequest.new
 request = request.from('nba_player_data.csv')
-request = request.select('name','college')
+request = request.select('name',"height")
 request = request.where('college', 'University of California')
 request = request.where('year_start', '1997')
 # request =request.join('college','nba_players.csv','college')
