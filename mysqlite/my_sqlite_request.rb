@@ -1,10 +1,11 @@
 require "csv"
 class MySqliteRequest
-attr_accessor :table_name, :hashedDataA,:hashedDataB, :request,:filename_db_b, :columns ,:selected_hash_array,:isWhere,:where_count,:isJoin,:column_on_db_a,:column_on_db_b,:filter_column, :filter_column_value
+attr_accessor :table_name, :hashedDataA,:hashedDataB, :request,:filename_db_b, :columns ,:isOrder, :order_type, :order_col,:selected_hash_array,:isWhere,:where_count,:isJoin,:column_on_db_a,:column_on_db_b,:filter_column, :filter_column_value
 def initialize
 @isWhere=false
 @isJoin=false
 @where_conditions=[]
+@isOrder=false
 end
 
 def from (table) # expect(MySqliteRequest.new.from('database.csv')).to be_a(MySqliteRequest) 
@@ -30,8 +31,7 @@ end
 
 def join(column_on_db_a, filename_db_b, column_on_db_b)
     # Read filename_db_b table data
-    @isJoin=true
-   
+    @isJoin=true  
     @column_on_db_a=column_on_db_a
     @column_on_db_b=column_on_db_b
     @filename_db_b=filename_db_b
@@ -39,6 +39,14 @@ def join(column_on_db_a, filename_db_b, column_on_db_b)
     self
 end
   
+
+def order(order, column_name)
+    @isOrder = true
+    @order_type = order
+    @order_col = column_name
+    self
+  end
+
   
 
 def run
@@ -74,22 +82,30 @@ def run
             @final=@selected_hash_array
         
 
-            if @isWhere                
-                @where_conditions.each do |current_condition| #all where condtions will run for the current table row before the process_row runs
-                    current_condition.each do |key,value|   
-                        if current_row[key] != value         
-                                @all_conditions_met=false
-                                break
+                if @isWhere                
+                    @where_conditions.each do |current_condition| #all where condtions will run for the current table row before the process_row runs
+                        current_condition.each do |key,value|   
+                            if current_row[key] != value         
+                                    @all_conditions_met=false
+                                    break
+                            end
                         end
                     end
-                end
-            process_row(current_row, result_hash, @filtered_hash_array, @columns)if @all_conditions_met  
-            @final=@filtered_hash_array
-        end
+                process_row(current_row, result_hash, @filtered_hash_array, @columns)if @all_conditions_met  
+                @final=@filtered_hash_array
+                end #isWhere
 
-    end #end of table loop
+                if @isOrder
+                    sorted_hashes = if @order_type == 'asc'  
+                      merge_sort(@final) { |a, b| a[order_col].downcase <=> b[@order_col].downcase }
+                    elsif @order_type=='desc'
+                      merge_sort(@final) { |a, b| b[order_col].downcase <=> a[@order_col].downcase }
+                    end
+                @final=sorted_hashes
+                end#isOrder
+        end #end of table loop
         
- end #of request='select'
+    end #of request='select'
     
     
 
@@ -102,7 +118,7 @@ end#of class
 #HELPER FUNCTIONS
 
 def table_to_hashed(table_name)
-hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h).take(5)
+hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h)
 return hashedData
 end
 
@@ -120,14 +136,41 @@ def process_row(row,result_hash, selected_hash_array,columns)
     
 end
 
-
+def merge_sort(array, &block)
+    return array if array.length <= 1
+  
+    mid = array.length / 2
+    left = merge_sort(array[0...mid], &block)
+    right = merge_sort(array[mid..-1], &block)
+    merge(left, right, &block)
+  end
+  
+  def merge(left, right, &block)
+    result = []
+    i = j = 0
+  
+    while i < left.length && j < right.length
+      if block.call(left[i], right[j]) <= 0
+        result << left[i]
+        i += 1
+      else
+        result << right[j]
+        j += 1
+      end
+    end
+  
+    result.concat(left[i..-1])
+    result.concat(right[j..-1])
+  
+    result
+  end
 request = MySqliteRequest.new
 request = request.from('nba_player_data.csv')
-request = request.select("name",'weight','weight2','college','year_start','player')
+request = request.select('name','year_start')
 request = request.where('college', 'University of California')
-request = request.where('year_start', '1997')
-# request =request.join('college','nba_players.csv','college')
-
+# request = request.where('year_start', '1997')
+request=request.order('desc','year_start')
 request.run
 
- 
+
+
