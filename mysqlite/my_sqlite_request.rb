@@ -65,8 +65,7 @@ self
 end
 
 def run
-      
-   
+
     if File.exist?(table_name)
       @hashedDataA=table_to_hashed(@table_name)
       else
@@ -108,9 +107,9 @@ def run
                 end #isWhere
 
                 if @isOrder
-                    sorted_hashes = if @order_type == 'asc'  
+                    sorted_hashes = if @order_type == :asc  
                       merge_sort(@final) { |a, b| a[order_col].downcase <=> b[@order_col].downcase }
-                    elsif @order_type=='desc'
+                    elsif @order_type==:desc
                       merge_sort(@final) { |a, b| b[order_col].downcase <=> a[@order_col].downcase }
                     end
                 @final=sorted_hashes
@@ -119,7 +118,7 @@ def run
         
     end #of request='select'
     
-    if @request=='insert' #dear reviewer, i dont know why these brings error in this ide,kindly
+    if @request=='insert' 
       insert_row(@table_name,@dataToInsert)
     end #of request='insert'
   
@@ -146,7 +145,7 @@ def create_csv_file(table_name,dataToInsert)
 end 
 
 def table_to_hashed(table_name)
-  hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h)
+  hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h).take(5)
   return hashedData
 end
 
@@ -222,7 +221,7 @@ end
 
 
 request = MySqliteRequest.new
-request = request.update('nba_player_data.csv')
-request = request.values('name' => 'Alaa Renamed')
-request = request.where('name', 'Alaa Abdelnaby')
+request = request.from('nba_player_data.csv')
+request = request.select('name')
+request = request.order(:asc,'name')
 request.run
