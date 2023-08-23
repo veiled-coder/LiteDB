@@ -79,17 +79,8 @@ def run
     
     
     if @isJoin
-        @hashedDataB = CSV.parse(File.read(@filename_db_b), headers: true).map(&:to_h).take(5)    
-        @hashedDataA.each do |rowA|
-        result_hash={}
-            @hashedDataB.each do |rowB|
-                if rowB[@column_on_db_b] === rowA[@column_on_db_a]
-                merged = rowA.merge(rowB)
-                 @merged_hash_array<<merged
-                end
-            end
-        end#hashsedDataA
-        @hashedDataA=@merged_hash_array
+        joined_tables=join_tables(@hashedDataB,@hashedDataA,@filename_db_b,@column_on_db_b,@column_on_db_a)
+        @hashedDataA=joined_tables
     end#is join
 
        
@@ -129,21 +120,10 @@ def run
     end #of request='select'
     
     if @request=='insert' #dear reviewer, i dont know why these brings error in this ide,kindly
-      
-      CSV.open(@table_name,"a+") do |csv|#test this in VsCode,it inserts data well without errors
-          @headers=csv.readline
-         @dataToInsert.each do |data|
-           dataValues=@headers.map do |header_name|
-             data[header_name]
-           end
-           csv<< dataValues
-          end  
-      end 
-  end #of request='insert'
+      insert_row(@table_name,@dataToInsert)
+    end #of request='insert'
   
-  # if @request =='update'
-
-  # end
+ 
 
 puts '..........................final result'   
 puts @final.inspect
@@ -151,10 +131,6 @@ end#of def run
 end#of class
 
 #HELPER FUNCTIONS
-def table_to_hashed(table_name)
-  hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h)
-  return hashedData
-end
 
 def create_csv_file(table_name,dataToInsert)
     CSV.open(table_name,"w") do |csv|
@@ -168,10 +144,38 @@ def create_csv_file(table_name,dataToInsert)
     end
     table_to_hashed(table_name)
 end 
- 
 
+def table_to_hashed(table_name)
+  hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h)
+  return hashedData
+end
 
+def join_tables(tableB,tableA,tableB_file,tableB_column,tableA_column)
+  joined_table_array=[]
+  tableB = CSV.parse(File.read(tableB_file), headers: true).map(&:to_h).take(5)    
+  tableA.each do |rowA|
+  result_hash={}
+      tableB.each do |rowB|
+          if rowB[tableB_column] === rowA[tableA_column]
+          merged = rowA.merge(rowB)
+           joined_table_array<<merged
+          end
+      end
+  end
+  joined_table_array
+end
 
+def insert_row(table_name,dataToInsert)
+  CSV.open(table_name,"a+") do |csv|#test this in VsCode,it inserts data well without errors
+    headers=csv.readline
+   dataToInsert.each do |data|
+     dataValues=headers.map do |header_name|
+       data[header_name]
+     end
+     csv<< dataValues
+    end  
+end 
+end
 def process_row(row,result_hash, selected_hash_array,columns)
   if  columns[0]==='*'
       selected_hash_array<<row
@@ -216,17 +220,9 @@ def merge(left, right, &block)
   result
 end
 
-# MySqliteRequest.insert('database.csv').values('firstname' => "Rahmat", 'lastname' => "Abdulfattah", 'age' => 25, 'password' => 'matrix').run()
-  MySqliteRequest.new.from('database.csv').select('firstname','lastname').where('firstname','Rahmat').run
 
-# request = MySqliteRequest.new
-# request = request.update('nba_player_data.csv')
-# request = request.values('name' => 'Alaa Renamed')
-# request = request.where('name', 'Alaa Abdelnaby')
-# request.run
-
-
-# request = MySqliteRequest.new
-# request = request.insert('nba_player_data.csv')
-# request = request.values('name' => 'Alaa Abdelnaby', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University')
-# request.run
+request = MySqliteRequest.new
+request = request.update('nba_player_data.csv')
+request = request.values('name' => 'Alaa Renamed')
+request = request.where('name', 'Alaa Abdelnaby')
+request.run
