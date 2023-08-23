@@ -1,6 +1,6 @@
 require "csv"
 class MySqliteRequest
-attr_accessor :table_name, :hashedDataA,:hashedDataB, :request,:filename_db_b, :columns ,:isOrder, :order_type, :order_col,:selected_hash_array,:isWhere,:where_count,:isJoin,:column_on_db_a,:column_on_db_b,:filter_column, :filter_column_value
+attr_accessor :table_name, :hashedDataA,:dataToInsert,:hashedDataB, :request,:filename_db_b, :columns ,:isOrder, :order_type, :order_col,:selected_hash_array,:isWhere,:where_count,:isJoin,:column_on_db_a,:column_on_db_b,:filter_column, :filter_column_value
 def initialize
 @isWhere=false
 @isJoin=false
@@ -48,6 +48,17 @@ def order(order, column_name)
   end
 
   
+def insert(table_name)
+  @table_name=table_name
+  @request='insert'
+  self 
+end
+
+def values(*data) #a hash of data key => value
+@dataToInsert=data
+
+self
+end
 
 def run
     @hashedDataA=table_to_hashed(@table_name)
@@ -107,7 +118,20 @@ def run
         
     end #of request='select'
     
-    
+    if @request=='insert'
+      CSV.open(@table_name,"a+") do |csv|
+          headers=csv.readline
+          puts headers.inspect
+         @dataToInsert.each do |data|
+           dataValues=headers.map do |header_name|
+             data[header_name]
+           end
+           csv<< dataValues
+          end
+          # csv << @dataToInsert
+      end 
+  end #of request='insert'
+  
 
 
 puts '..........................final result'   
@@ -122,55 +146,55 @@ hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h)
 return hashedData
 end
 
-def process_row(row,result_hash, selected_hash_array,columns)
-    if  columns[0]==='*'
-        selected_hash_array<<row
-   
-    else
-        columns.each do |column_name| 
-        result_hash[column_name]=row[column_name]
 
-        end
-    end  
-    selected_hash_array << result_hash if result_hash != {}
-    
+
+def process_row(row,result_hash, selected_hash_array,columns)
+  if  columns[0]==='*'
+      selected_hash_array<<row
+ 
+  else
+      columns.each do |column_name| 
+      result_hash[column_name]=row[column_name]
+
+      end
+  end  
+  selected_hash_array << result_hash if result_hash != {}
+  
 end
 
 def merge_sort(array, &block)
-    return array if array.length <= 1
-  
-    mid = array.length / 2
-    left = merge_sort(array[0...mid], &block)
-    right = merge_sort(array[mid..-1], &block)
-    merge(left, right, &block)
-  end
-  
-  def merge(left, right, &block)
-    result = []
-    i = j = 0
-  
-    while i < left.length && j < right.length
-      if block.call(left[i], right[j]) <= 0
-        result << left[i]
-        i += 1
-      else
-        result << right[j]
-        j += 1
-      end
+  return array if array.length <= 1
+
+  mid = array.length / 2 
+  left = merge_sort(array[0...mid], &block)
+  right = merge_sort(array[mid..-1], &block)
+  merge(left, right, &block)
+end
+
+
+def merge(left, right, &block)
+  result = []
+  i = j = 0
+
+  while i < left.length && j < right.length
+    if block.call(left[i], right[j]) <= 0
+      result << left[i]
+      i += 1
+    else
+      result << right[j]
+      j += 1
     end
-  
-    result.concat(left[i..-1])
-    result.concat(right[j..-1])
-  
-    result
   end
-request = MySqliteRequest.new
-request = request.from('nba_player_data.csv')
-request = request.select('name','year_start')
-request = request.where('college', 'University of California')
-# request = request.where('year_start', '1997')
-request=request.order('desc','year_start')
-request.run
+
+  result.concat(left[i..-1])
+  result.concat(right[j..-1])
+
+  result
+end
 
 
+  request = MySqliteRequest.new
+  request = request.insert('nba_player_data.csv')
+  request = request.values('name' => 'Alaa Abdelnaby', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University')
+  request.run
 
