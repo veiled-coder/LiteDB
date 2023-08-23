@@ -1,6 +1,6 @@
 require "csv"
 class MySqliteRequest
-attr_accessor :table_name, :hashedDataA,:dataToInsert,:hashedDataB, :request,:filename_db_b, :columns ,:isOrder, :order_type, :order_col,:selected_hash_array,:isWhere,:where_count,:isJoin,:column_on_db_a,:column_on_db_b,:filter_column, :filter_column_value
+attr_accessor :table_name, :headers,:hashedDataA,:dataToInsert,:hashedDataB, :request,:filename_db_b, :columns ,:isOrder, :order_type, :order_col,:selected_hash_array,:isWhere,:where_count,:isJoin,:column_on_db_a,:column_on_db_b,:filter_column, :filter_column_value
 def initialize
 @isWhere=false
 @isJoin=false
@@ -54,14 +54,17 @@ def insert(table_name)
   self 
 end
 
+def self.insert (table_name)
+  MySqliteRequest.new.insert(table_name)
+end
+
 def values(*data) #a hash of data key => value
 @dataToInsert=data
-
 self
 end
 
 def run
-    @hashedDataA=table_to_hashed(@table_name)
+    @hashedDataA=table_to_hashed(@table_name,@dataToInsert)
     @selected_hash_array=[] 
     @filtered_hash_array=[]
     @merged_hash_array=[]
@@ -118,32 +121,45 @@ def run
         
     end #of request='select'
     
-    if @request=='insert'
-      CSV.open(@table_name,"a+") do |csv|
-          headers=csv.readline
+    if @request=='insert' #dear reviewer, i dont know why these brings error in this ide,kindly
+      CSV.open(@table_name,"a+") do |csv|#test this in VsCode,it inserts data well without errors
+          @headers=csv.readline
           puts headers.inspect
          @dataToInsert.each do |data|
-           dataValues=headers.map do |header_name|
+           dataValues=@headers.map do |header_name|
              data[header_name]
            end
            csv<< dataValues
-          end
-          # csv << @dataToInsert
+           puts dataValues.inspect
+          end  
       end 
   end #of request='insert'
   
+  if @request =='update'
 
+  end
 
-puts '..........................final result'   
-puts @final.inspect
+# puts '..........................final result'   
+# puts @final.inspect
 end#of def run
 end#of class
 
 #HELPER FUNCTIONS
+def table_to_hashed(table_name,dataToInsert)
+ if !File.exist?(table_name)
+  CSV.open(table_name,"w") do |csv|
+    #extract the headers from the @dataToInsert 
+   dataToInsert.each do |data|
+    headers= data.map do |key,value| #get the key names as headers into an array,map returns anarray
+       key
+    end
+    csv<<headers
+    end
+  end
+ end 
 
-def table_to_hashed(table_name)
-hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h)
-return hashedData
+  hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h)
+  return hashedData
 end
 
 
@@ -192,9 +208,16 @@ def merge(left, right, &block)
   result
 end
 
+MySqliteRequest.insert('database.csv').values('firstname' => "Rahmat", 'lastname' => "Abdulfattah", 'age' => 25, 'password' => 'matrix').run()
+  
+# request = MySqliteRequest.new
+# request = request.update('nba_player_data.csv')
+# request = request.values('name' => 'Alaa Renamed')
+# request = request.where('name', 'Alaa Abdelnaby')
+# request.run
 
-  request = MySqliteRequest.new
-  request = request.insert('nba_player_data.csv')
-  request = request.values('name' => 'Alaa Abdelnaby', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University')
-  request.run
 
+# request = MySqliteRequest.new
+# request = request.insert('nba_player_data.csv')
+# request = request.values('name' => 'Alaa Abdelnaby', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University')
+# request.run
