@@ -59,9 +59,21 @@ def self.insert (table_name)
   MySqliteRequest.new.insert(table_name)
 end
 
+def update(table_name)
+  @request='update'
+  @table_name=table_name
+  self
+end
+def self.update(table_name)
+  MySqliteRequest.new.update(table_name)
+end
 def values(*data) #a hash of data key => value
 @dataToInsert=data
 self
+end
+def set(*data) #a hash of data key => value
+  @dataToInsert=data
+  self
 end
 
 def run
@@ -80,11 +92,12 @@ def run
     if @isJoin
         joined_tables=join_tables(@hashedDataB,@hashedDataA,@filename_db_b,@column_on_db_b,@column_on_db_a)
         @hashedDataA=joined_tables
-    end#is join
+    end
 
        
     #convert table data in CSV::Row to a HashedData
-    if @request==='select' # select the columns  from the each table row and corresponding data
+    case @request
+      when 'select' # select the columns  from the each table row and corresponding data
         @hashedDataA.each do |current_row|
             result_hash={}
             @all_conditions_met=true;
@@ -116,17 +129,57 @@ def run
                 end#isOrder
         end #end of table loop
         
-    end #of request='select'
+   
     
-    if @request=='insert' 
+      when 'insert' 
       insert_row(@table_name,@dataToInsert)
-    end #of request='insert'
+    
   
- 
+      when 'update'
+    
+    #@where_conditions [{"name"=>"Alaa Abdelnaby"}, {"year_start"=>"1991"}]
+    updated_array=[]
+    header=CSV.read(@table_name,headers:true).headers
+      CSV.foreach(@table_name,headers:true) do |current_csv_row|
+        all_conditions_met=true
+        
+        @where_conditions.each do |current_condition|
+        current_condition.each do |key,value|
+          if current_csv_row[key]!=value
+            all_conditions_met=false  
+            break   
+          end
+        end   
+        end#where
+
+        if all_conditions_met
+          #then update the row before pushing to the csv
+            @dataToInsert.each do |current_condition|#[{"name"=>"Alaa Renamed", "college"=>"Renamed University"}]
+              current_condition.each do |key,value|   
+                current_csv_row[key]=value     #update the value of the current_csv_row
+              end
+            end
+        end
+         updated_array<<current_csv_row.to_h
+        
+          end#CSV.foreach
+      
+          CSV.open(@table_name,'w+',write_headers:true,headers:header) do |csv|
+   
+            updated_array.each do |current_updated_row|
+              csv<<current_updated_row
+            end
+          end
+      @final=updated_array
+    end#case
+        
+  
+    
+
 
 puts '..........................final result'   
 puts @final.inspect
-end#of def run
+  end#of def run
 end#of class
 
 #HELPER FUNCTIONS
@@ -145,13 +198,13 @@ def create_csv_file(table_name,dataToInsert)
 end 
 
 def table_to_hashed(table_name)
-  hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h).take(5)
+  hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h)
   return hashedData
 end
 
 def join_tables(tableB,tableA,tableB_file,tableB_column,tableA_column)
   joined_table_array=[]
-  tableB = CSV.parse(File.read(tableB_file), headers: true).map(&:to_h).take(5)    
+  tableB = CSV.parse(File.read(tableB_file), headers: true).map(&:to_h)
   tableA.each do |rowA|
   result_hash={}
       tableB.each do |rowB|
@@ -175,6 +228,7 @@ def insert_row(table_name,dataToInsert)
     end  
 end 
 end
+
 def process_row(row,result_hash, selected_hash_array,columns)
   if  columns[0]==='*'
       selected_hash_array<<row
@@ -189,6 +243,7 @@ def process_row(row,result_hash, selected_hash_array,columns)
   
 end
 
+ 
 def merge_sort(array, &block)
   return array if array.length <= 1
 
@@ -219,9 +274,8 @@ def merge(left, right, &block)
   result
 end
 
-
 request = MySqliteRequest.new
-request = request.from('nba_player_data.csv')
-request = request.select('name')
-request = request.order(:asc,'name')
+request = request.update('nba_player_data.csv')
+request = request.set('name' => 'Jimmy agabaje')
+request = request.where('name', 'Jim Zoet Renamed2')
 request.run
