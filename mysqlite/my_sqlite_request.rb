@@ -107,14 +107,7 @@ def run
         
 
                 if @isWhere                
-                    @where_conditions.each do |current_condition| #all where condtions will run for the current table row before the process_row runs
-                        current_condition.each do |key,value|   
-                            if current_row[key] != value         
-                                    @all_conditions_met=false
-                                    break
-                            end
-                        end
-                    end
+                @all_conditions_met=check_all_conditions_met(current_row,@where_conditions)
                 process_row(current_row, result_hash, @filtered_hash_array, @columns)if @all_conditions_met  
                 @final=@filtered_hash_array
                 end #isWhere
@@ -141,17 +134,7 @@ def run
     updated_array=[]
     header=CSV.read(@table_name,headers:true).headers
       CSV.foreach(@table_name,headers:true) do |current_csv_row|
-        all_conditions_met=true
-        
-        @where_conditions.each do |current_condition|
-        current_condition.each do |key,value|
-          if current_csv_row[key]!=value
-            all_conditions_met=false  
-            break   
-          end
-        end   
-        end#where
-
+        all_conditions_met=check_all_conditions_met(current_csv_row,@where_conditions)
         if all_conditions_met
           #then update the row before pushing to the csv
             @dataToInsert.each do |current_condition|#[{"name"=>"Alaa Renamed", "college"=>"Renamed University"}]
@@ -242,7 +225,20 @@ def process_row(row,result_hash, selected_hash_array,columns)
   selected_hash_array << result_hash if result_hash != {}
   
 end
+def check_all_conditions_met(current_row, where_conditions)
+  all_conditions_met = true
 
+  where_conditions.each do |current_condition|
+    current_condition.each do |key, value|
+      if current_row[key] != value
+        all_conditions_met = false
+        break
+      end
+    end
+  end
+
+  all_conditions_met
+end
  
 def merge_sort(array, &block)
   return array if array.length <= 1
@@ -275,7 +271,11 @@ def merge(left, right, &block)
 end
 
 request = MySqliteRequest.new
-request = request.update('nba_player_data.csv')
-request = request.set('name' => 'Jimmy agabaje')
-request = request.where('name', 'Jim Zoet Renamed2')
-request.run
+request=request.from('nba_players.csv')
+request=request.select('player','height')
+request=request.where('height','196')
+request=request.run()
+# request = request.update('nba_player_data.csv')
+# request = request.set('name' => 'Jimmy agabaje2')
+# request = request.where('name', 'Jimmy agabaje')
+# request.run
