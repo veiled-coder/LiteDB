@@ -76,12 +76,17 @@ def set(*data) #a hash of data key => value
   self
 end
 
+def delete
+    @request='delete'
+self
+end
+
 def run
 
-    if File.exist?(table_name)
+    if File.exist?(@table_name)
       @hashedDataA=table_to_hashed(@table_name)
       else
-      @hashedData=create_csv_file(@table_name,@dataToInsert) if !File.exist?(table_name)
+      @hashedDataA=create_csv_file(@table_name,@dataToInsert) if !File.exist?(table_name)
     end
     @selected_hash_array=[] 
     @filtered_hash_array=[]
@@ -144,6 +149,7 @@ def run
             end
         end
          updated_array<<current_csv_row.to_h
+         
         
           end#CSV.foreach
       
@@ -154,13 +160,43 @@ def run
             end
           end
       @final=updated_array
+
+        when 'delete'
+          
+        table = CSV.table(@table_name) #delete_if is available in a tableMode
+        header=CSV.read(@table_name,headers:true).headers
+       
+        @where_conditions.each do |current_condition|
+          current_condition.each do |key, value|
+           # Delete rows that match the condition
+            table.delete_if do |row|
+              row[key.to_sym] == value
+            end
+          end
+        end
+        
+       
+        csv_data=table.to_csv
+        csv_array = CSV.parse(csv_data, headers: true).map(&:to_h) #convert to an array of hashes
+
+        CSV.open(@table_name,'w',write_headers:true,headers:header) do |csv|
+          csv_array.each do |row|
+            csv<<row           
+          end              
+        end
+      
+      @final=csv_array
+     
+       
+       
+        
+
     end#case
         
   
     
 
 
-puts '..........................final result'   
 puts @final.inspect
   end#of def run
 end#of class
@@ -181,7 +217,7 @@ def create_csv_file(table_name,dataToInsert)
 end 
 
 def table_to_hashed(table_name)
-  hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h)
+  hashedData=CSV.parse(File.read(table_name),headers:true).map(&:to_h).take(10)
   return hashedData
 end
 
@@ -269,13 +305,13 @@ def merge(left, right, &block)
 
   result
 end
-
 request = MySqliteRequest.new
-request=request.from('nba_players.csv')
-request=request.select('player','height')
-request=request.where('height','196')
-request=request.run()
+request = request.delete()
+request = request.from('nba_player_data.csv')
+request = request.where('name', 'Paul Zipser')
+request.run
+# request = MySqliteRequest.new
 # request = request.update('nba_player_data.csv')
-# request = request.set('name' => 'Jimmy agabaje2')
-# request = request.where('name', 'Jimmy agabaje')
+# request = request.values('name' => 'Alaa Renamed')
+# request = request.where('name', 'Matt Zunic')
 # request.run
