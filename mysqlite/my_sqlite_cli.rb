@@ -69,6 +69,7 @@ def runSelectWhereQuery(conditions,table_name,column_name)
     splitted_conditions=conditions.split(",")#["name=Ivica Zubac", "year_start=1949"]   
     splitted_conditions.each do |current_condition|
         current_pair_array=current_condition.split("=")
+        puts current_pair_array.inspect
         request=request.where(*current_pair_array)
     end
     return request
@@ -85,6 +86,7 @@ MySQLite.new
 # SELECT name
 # FROM table1
 # JOIN table2 ON  table1.id=table2.id
+#SELECT name,email FROM students WHERE name='Matt Zunic'
 
 # request = MySqliteRequest.new
 # request = request.from('nba_player_data.csv')
