@@ -19,16 +19,24 @@ case query
 when 'exit'
     puts 'exiting sqlte cli'
     break
-when /^(\s*(SELECT|select)\s+([\w\s*,]+)\s+(FROM|from)\s+(\S+)\s*(?:(WHERE|where)\s+(.*?))?\s*)$/
+when /^(\s*(SELECT|select)\s+([\w\s*,]+)\s+(FROM|from)\s+(\S+)\s*(?:(JOIN|join)\s+(\S+)\s+(on|ON)\s+(\S+))?(?:(WHERE|where)\s+(.*?))?\s*)$/
 
     column_name=$3
     table_name="#{$5}.csv"
-    where_conditions=$7
+    where_conditions=$11
+    table_name2="#{$7}.csv"
+    join_on=$9 
+   
+    
+
     result=runSelectQuery(table_name,column_name).run
-       
-    if where_conditions
-    result=runSelectWhereQuery(where_conditions,table_name,column_name).run      
+    if join_on
+        result=runJoinQuery(join_on,table_name,table_name2,column_name).run
+
     end
+    if where_conditions
+        result=runSelectWhereQuery(where_conditions,table_name,column_name).run      
+    end#where
    
     
 
@@ -66,5 +74,20 @@ def runSelectWhereQuery(conditions,table_name,column_name)
     return request
 end
 
+def runJoinQuery(join_conditions,table_name,table_name2,column_name)
+    join_conditions_array=join_conditions.split("=")
+    request=runSelectQuery(table_name,column_name)
+    request=request.join(join_conditions_array[0],table_name2,join_conditions_array[1])
+    return request
+end
 MySQLite.new
-# select name,age from nba_player_data.csv
+
+# SELECT name
+# FROM table1
+# JOIN table2 ON  table1.id=table2.id
+
+# request = MySqliteRequest.new
+# request = request.from('nba_player_data.csv')
+# request=request.select('*')
+# request=request.join('weight','nba_players.csv','weight2')
+# request.run

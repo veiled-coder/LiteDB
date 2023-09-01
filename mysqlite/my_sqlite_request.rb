@@ -18,8 +18,10 @@ MySqliteRequest.new.from(table)
 end
 
 def select(*variable_columns)# * this converts our parametrs to an array
+
 @request='select'
 @columns=variable_columns
+
 self
 end
 
@@ -301,11 +303,52 @@ def merge(left, right, &block)
 
   result
 end
+
 # request = MySqliteRequest.new
-# request = request.delete()-__+++
 # request = request.from('nba_player_data.csv')
+# request=request.select('*')
+# request=request.join('weight','nba_players.csv','weight2')
+# request.run
+
+# request = MySqliteRequest.new
+# request = request.from('nba_player_data.csv')
+# request = request.select('name')
+# request = request.where('college', "University of California, Los Angeles")
+# request = request.where('year_start', '1970')
+
+# request.run
+
+
+
+
 # request = request.where('name', 'Paul Zipser')
 # request.run
+# request = MySqliteRequest.new
+# request = request.update('nba_player_data.csv')
+# request = request.values('name' => 'Alaa Renamed')
+# request = request.where('name', 'Matt Zunic')
+# request.run
+# def join(column_on_db_a, filename_db_b, column_on_db_b)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # request = MySqliteRequest.new
 # request = request.update('nba_player_data.csv')
 # request = request.values('name' => 'Alaa Renamed')
