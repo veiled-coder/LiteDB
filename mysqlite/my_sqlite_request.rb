@@ -84,9 +84,9 @@ end
 def run
 
     if File.exist?(@table_name)
-      @hashedDataA=table_to_hashed(@table_name)
+      @hashedData=table_to_hashed(@table_name)
       else
-      @hashedDataA=create_csv_file(@table_name,@dataToInsert) if !File.exist?(table_name)
+      @hashedData=create_csv_file(@table_name,@dataToInsert) if !File.exist?(table_name)
     end
     @selected_hash_array=[] 
     @filtered_hash_array=[]
@@ -95,15 +95,15 @@ def run
     
     
     if @isJoin
-        joined_tables=join_tables(@hashedDataB,@hashedDataA,@filename_db_b,@column_on_db_b,@column_on_db_a)
-        @hashedDataA=joined_tables
+        joined_tables=join_tables(@hashedDataB,@hashedData,@filename_db_b,@column_on_db_b,@column_on_db_a)
+        @hashedData=joined_tables
     end
 
        
     #convert table data in CSV::Row to a HashedData
     case @request
       when 'select' # select the columns  from the each table row and corresponding data
-        @hashedDataA.each do |current_row|
+        @hashedData.each do |current_row|
             result_hash={}
             @all_conditions_met=true;
 
@@ -163,13 +163,13 @@ def run
 
         when 'delete'
           
-        table = CSV.table(@table_name) #delete_if is available in a tableMode
+        table = CSV.table(@table_name) #delete_if is available in a tableMode,headers in it are symbols
         header=CSV.read(@table_name,headers:true).headers
        
         @where_conditions.each do |current_condition|
           current_condition.each do |key, value|
            # Delete rows that match the condition
-            table.delete_if do |row|
+            table.delete_if do |row| 
               row[key.to_sym] == value
             end
           end
@@ -187,17 +187,13 @@ def run
       
       @final=csv_array
      
-       
-       
-        
-
-    end#case
+ end#case
         
   
     
 
 
-puts @final.inspect
+ @final
   end#of def run
 end#of class
 
@@ -305,11 +301,11 @@ def merge(left, right, &block)
 
   result
 end
-request = MySqliteRequest.new
-request = request.delete()
-request = request.from('nba_player_data.csv')
-request = request.where('name', 'Paul Zipser')
-request.run
+# request = MySqliteRequest.new
+# request = request.delete()-__+++
+# request = request.from('nba_player_data.csv')
+# request = request.where('name', 'Paul Zipser')
+# request.run
 # request = MySqliteRequest.new
 # request = request.update('nba_player_data.csv')
 # request = request.values('name' => 'Alaa Renamed')
