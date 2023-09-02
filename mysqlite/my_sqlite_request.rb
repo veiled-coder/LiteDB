@@ -304,6 +304,13 @@ def merge(left, right, &block)
   result
 end
 
+
+# request = MySqliteRequest.new
+# request = request.insert('nba_player_data.csv')
+# request = request.values('name' => 'Alaa Abdelnaby34', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University')
+# request.run
+
+
 # request = MySqliteRequest.new
 # request = request.from('nba_player_data.csv')
 # request=request.select('*')

@@ -66,11 +66,15 @@ end
 
 def runSelectWhereQuery(conditions,table_name,column_name)
     request=runSelectQuery(table_name,column_name)
-    splitted_conditions=conditions.split(",")#["name=Ivica Zubac", "year_start=1949"]   
+    splitted_conditions=conditions.split(",")#["name='Ivica Zubac'", "year_start='1949'"]   
+    
     splitted_conditions.each do |current_condition|
-        current_pair_array=current_condition.split("=")
-        puts current_pair_array.inspect
-        request=request.where(*current_pair_array)
+        current_pair_array=current_condition.split("=")#["name", "'Matt Zunic'"]
+
+        condition_array=current_pair_array.map do |condition|
+            condition.delete_prefix("'").delete_suffix("'")
+        end
+        request=request.where(*condition_array)
     end
     return request
 end
@@ -82,6 +86,15 @@ def runJoinQuery(join_conditions,table_name,table_name2,column_name)
     return request
 end
 MySQLite.new
+
+# INSERT INTO students VALUES (John,'1991','1995','F-C','6-10','240',"June 24, 1968", 'Duke University')
+
+
+
+
+
+
+
 
 # SELECT name
 # FROM table1
