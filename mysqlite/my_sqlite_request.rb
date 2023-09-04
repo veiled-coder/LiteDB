@@ -132,6 +132,7 @@ def run
    
     
       when 'insert' 
+     
       insert_row(@table_name,@dataToInsert)
     
   
@@ -235,17 +236,40 @@ def join_tables(tableB,tableA,tableB_file,tableB_column,tableA_column)
 end
 
 def insert_row(table_name,dataToInsert)
+  data_array=[]
+  values_array=[]
+  merged_hash={}
+insert_index=0
   CSV.open(table_name,"a+") do |csv|#test this in VsCode,it inserts data well without errors
     headers=csv.readline
-   dataToInsert.each do |data|
-     dataValues=headers.map do |header_name|
-       data[header_name]
+      dataToInsert.each do |data|
+          if data.class == String
+            values_array=dataToInsert
+            csv<<values_array
+          return
+        end
+      end
+
+    keys_array = dataToInsert.map(&:keys).flatten
+    
+    dataToInsert.each do |data_hash|
+      merged_hash.merge!(data_hash)
+    end
+    
+     headers.each_with_index do |header_name,i|
+      my_hash={}
+      my_hash[header_name]= merged_hash[header_name]
+      data_array<<my_hash
      end
-     csv<< dataValues
-    end  
-end 
+
+      values_array=data_array.map do |data|
+        data.values.first
+     end
+   
+      csv << values_array
 end
 
+end
 def process_row(row,result_hash, selected_hash_array,columns)
   if  columns[0]==='*'
       selected_hash_array<<row
@@ -304,11 +328,10 @@ def merge(left, right, &block)
   result
 end
 
-
-# request = MySqliteRequest.new
-# request = request.insert('nba_player_data.csv')
-# request = request.values('name' => 'Alaa Abdelnaby34', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University')
-# request.run
+request = MySqliteRequest.new
+request = request.insert('nba_player_data.csv')
+request = request.values('name' => 'Alaa Abdelnaby', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University')
+request.run
 
 
 # request = MySqliteRequest.new

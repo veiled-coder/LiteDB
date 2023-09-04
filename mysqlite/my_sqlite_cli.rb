@@ -20,26 +20,56 @@ when 'exit'
     puts 'exiting sqlte cli'
     break
 when /^(\s*(SELECT|select)\s+([\w\s*,]+)\s+(FROM|from)\s+(\S+)\s*(?:(JOIN|join)\s+(\S+)\s+(on|ON)\s+(\S+))?(?:(WHERE|where)\s+(.*?))?\s*)$/
-
     column_name=$3
     table_name="#{$5}.csv"
     where_conditions=$11
     table_name2="#{$7}.csv"
     join_on=$9 
-   
-    
 
     result=runSelectQuery(table_name,column_name).run
     if join_on
         result=runJoinQuery(join_on,table_name,table_name2,column_name).run
-
     end
     if where_conditions
         result=runSelectWhereQuery(where_conditions,table_name,column_name).run      
-    end#where
+    end
+
+when /^(?:INSERT|insert)\s+(?:INTO|into)\s+(\w+)(?:\s+\(([^)]+)\))?\s+(?:VALUES|values)\s+\(([^)]+)\)\s*;?\s*$/
+
+     table_name="#{$1}.csv"
+     table_column=$2
+     table_data=$3
+     hash_data_array=[]
+     split_data = CSV.parse(table_data).first
+     if table_column
+            split_column=table_column.split(",")
+            split_column.each_with_index do |column,i|
+            data_hash={}
+            data_hash[column] = split_data[i]
+            hash_data_array<<data_hash
+            end
+            
+     end
+ 
+    #  puts data_array.inspect
+    #  puts table_data_hashed.inspect
+    #  puts split_data.inspect
+    #  puts table_data_hashed.inspect
    
     
+request = MySqliteRequest.new
+request = request.insert(table_name)
+if table_column
+request = request.values(*hash_data_array)
+else
+    request = request.values(*split_data)
+end
+request.run
 
+#as a hash data is sent this way 
+#'name' => 'Alaa Abdelnaby', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University'    
+
+    
 else
     puts 'Invalid query format. Please enter a valid query...e.g..SELECT * FROM database.csv'  
 end#when
@@ -87,7 +117,8 @@ def runJoinQuery(join_conditions,table_name,table_name2,column_name)
 end
 MySQLite.new
 
-# INSERT INTO students VALUES (John,'1991','1995','F-C','6-10','240',"June 24, 1968", 'Duke University')
+
+# INSERT INTO nba_player_data (name,year_start,year_end,position,height,weight,birth_date,college) VALUES (Alaa Abdelnaby34,1991,1995,F-C,6-10,240,"June 24, 1968",Duke University)
 
 
 
