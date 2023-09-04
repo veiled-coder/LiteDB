@@ -41,34 +41,8 @@ when /^(?:INSERT|insert)\s+(?:INTO|into)\s+(\w+)(?:\s+\(([^)]+)\))?\s+(?:VALUES|
      table_data=$3
      hash_data_array=[]
      split_data = CSV.parse(table_data).first
-     if table_column
-            split_column=table_column.split(",")
-            split_column.each_with_index do |column,i|
-            data_hash={}
-            data_hash[column] = split_data[i]
-            hash_data_array<<data_hash
-            end
-            
-     end
- 
-    #  puts data_array.inspect
-    #  puts table_data_hashed.inspect
-    #  puts split_data.inspect
-    #  puts table_data_hashed.inspect
-   
+     runInsertQuery(table_name,table_column,hash_data_array,split_data).run
     
-request = MySqliteRequest.new
-request = request.insert(table_name)
-if table_column
-request = request.values(*hash_data_array)
-else
-    request = request.values(*split_data)
-end
-request.run
-
-#as a hash data is sent this way 
-#'name' => 'Alaa Abdelnaby', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University'    
-
     
 else
     puts 'Invalid query format. Please enter a valid query...e.g..SELECT * FROM database.csv'  
@@ -115,12 +89,35 @@ def runJoinQuery(join_conditions,table_name,table_name2,column_name)
     request=request.join(join_conditions_array[0],table_name2,join_conditions_array[1])
     return request
 end
+
+def runInsertQuery(table_name,table_column,hash_data_array,split_data)
+if table_column
+        split_column=table_column.split(",")
+        split_column.each_with_index do |column,i|
+        data_hash={}
+        data_hash[column] = split_data[i]
+        hash_data_array<<data_hash
+        end
+        
+ end
+
+request = MySqliteRequest.new
+request = request.insert(table_name)
+    if table_column
+        request = request.values(*hash_data_array)
+        else
+        request = request.values(*split_data)
+    end
+request
+end
 MySQLite.new
 
 
 # INSERT INTO nba_player_data (name,year_start,year_end,position,height,weight,birth_date,college) VALUES (Alaa Abdelnaby34,1991,1995,F-C,6-10,240,"June 24, 1968",Duke University)
 
 
+#as a hash data is sent this way 
+#'name' => 'Alaa Abdelnaby', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University'    
 
 
 
