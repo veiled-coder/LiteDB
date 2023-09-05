@@ -1,4 +1,3 @@
-
 require_relative 'my_sqlite_request'
 
 class MySQLite
@@ -8,7 +7,6 @@ class MySQLite
     end
 end    
 
-#SELECT * FROM students.db
 def queryUserInput
 loop do
     print 'my_sqlite_cli>'
@@ -40,10 +38,18 @@ when /^(?:INSERT|insert)\s+(?:INTO|into)\s+(\w+)(?:\s+\(([^)]+)\))?\s+(?:VALUES|
      table_column=$2
      table_data=$3
      hash_data_array=[]
-     split_data = CSV.parse(table_data).first
-     runInsertQuery(table_name,table_column,hash_data_array,split_data).run
-    
-    
+     parsed_table_data = CSV.parse(table_data).first
+     runInsertQuery(table_name,table_column,hash_data_array,parsed_table_data).run
+
+when /(?:UPDATE|update)\s+(\w+)\s+(?:SET|set)\s+(.+?)\s+(?:WHERE|where)\s+(.+)/
+
+    table_name="#{$1}.csv"
+    values=$2
+    where_conditions=$3
+    request=runUpdateQuery(table_name,values,where_conditions).run
+   
+
+
 else
     puts 'Invalid query format. Please enter a valid query...e.g..SELECT * FROM database.csv'  
 end#when
@@ -62,7 +68,7 @@ def runSelectQuery(table_name,column_name)
     if column_name=="*"
         request = request.select(column_name)
     else
-        columNameArray=column_name.split(",")   #was "name,age" now ['name','age']
+        columNameArray=column_name.split(",")  
         request = request.select(*columNameArray)
     end
     return request
@@ -70,10 +76,10 @@ end
 
 def runSelectWhereQuery(conditions,table_name,column_name)
     request=runSelectQuery(table_name,column_name)
-    splitted_conditions=conditions.split(",")#["name='Ivica Zubac'", "year_start='1949'"]   
+    splitted_conditions=conditions.split(",") 
     
     splitted_conditions.each do |current_condition|
-        current_pair_array=current_condition.split("=")#["name", "'Matt Zunic'"]
+        current_pair_array=current_condition.split("=")
 
         condition_array=current_pair_array.map do |condition|
             condition.delete_prefix("'").delete_suffix("'")
@@ -90,17 +96,18 @@ def runJoinQuery(join_conditions,table_name,table_name2,column_name)
     return request
 end
 
-def runInsertQuery(table_name,table_column,hash_data_array,split_data)
+def runInsertQuery(table_name,table_column,hash_data_array,parsed_table_data)
 if table_column
         split_column=table_column.split(",")
         split_column.each_with_index do |column,i|
         data_hash={}
-        data_hash[column] = split_data[i]
+        data_hash[column] = parsed_table_data[i]
         hash_data_array<<data_hash
         end
         
  end
 
+ 
 request = MySqliteRequest.new
 request = request.insert(table_name)
     if table_column
@@ -110,8 +117,52 @@ request = request.insert(table_name)
     end
 request
 end
-MySQLite.new
+def runUpdateQuery(table_name,values,where_conditions)
+    splitted_values=values.split(", ")
+    values_to_update={}
+   
+    splitted_values.each do |value_pair|
+        value_pair_hash={}
+        #create an hash for eaac pair,then push to an array
+        value_pair_array=value_pair.split("=")
+        edited_pair_array=value_pair_array.map do |element|
+            element.strip
+        end
+     
+        value_pair_hash[edited_pair_array[0]]=edited_pair_array[1]
+        values_to_update.merge!(value_pair_hash)
+    end
+   
 
+request = MySqliteRequest.new
+request = request.update(table_name)
+request = request.values(values_to_update)
+request = processWhereConditions(where_conditions,request)
+request
+end
+
+def processWhereConditions(conditions,request)
+    splitted_conditions=conditions.split(",")
+
+    splitted_conditions.each do |current_condition|
+        current_pair_array=current_condition.split("=")
+        edited_pair_array=current_pair_array.map do |element|
+            element.strip
+     end
+        request=request.where(*edited_pair_array)
+    end
+    return request
+end
+MySQLite.new
+# UPDATE nba_player_data SET name = 'Bill Renamed', year_start = '2330' WHERE name = 'Bill Zopf',year_start='1971'
+
+# request = MySqliteRequest.new
+# request = request.update('nba_player_data.csv')
+# request = request.values('name' => 'Alaa Renamed2','year_start'=>'2023')
+# request = request.where('name', 'Alaa Renamed')
+# request = request.where('year_start', '1991')
+
+# the values were received as [{"name"=>"Alaa Renamed2", "year_start"=>"2023"}]
 
 # INSERT INTO nba_player_data (name,year_start,year_end,position,height,weight,birth_date,college) VALUES (Alaa Abdelnaby34,1991,1995,F-C,6-10,240,"June 24, 1968",Duke University)
 
@@ -134,3 +185,5 @@ MySQLite.new
 # request=request.select('*')
 # request=request.join('weight','nba_players.csv','weight2')
 # request.run
+
+# UPDATE students SET email = 'jane@janedoe.com', blog = 'https://blog.janedoe.com' WHERE name = 'Mila'

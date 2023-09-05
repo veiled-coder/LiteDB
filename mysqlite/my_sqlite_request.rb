@@ -27,7 +27,11 @@ end
 
 def where(column_name, value) # During the run() you will filter the result which match the value.
 @where_conditions<<{column_name=> value}  
-@isWhere=true
+@isWhere=true 
+puts @where_conditions.inspect
+#[{"name"=>"Matt Zunic"}, {"year_start"=>"2017"}]
+#cli wrong
+#[{"name "=>" Bill Zopf"}, {" year_start"=>"1971"}]
 self
 end
 
@@ -71,6 +75,7 @@ def self.update(table_name)
 end
 def values(*data) #a hash of data key => value
 @dataToInsert=data
+puts dataToInsert.inspect #[{"name"=>"Matt Renamed", "year_start"=>"2017"}] normal
 self
 end
 def set(*data) #a hash of data key => value
@@ -328,10 +333,17 @@ def merge(left, right, &block)
   result
 end
 
-request = MySqliteRequest.new
-request = request.insert('nba_player_data.csv')
-request = request.values('name' => 'Alaa Abdelnaby', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University')
-request.run
+# request = MySqliteRequest.new
+# request = request.update('nba_player_data.csv')
+# request = request.values('name' => 'Matt Renamed','year_start'=>'2017')
+# request = request.where('name', 'Matt Zunic')
+# request = request.where('year_start', '2017')
+
+# request.run
+# request = MySqliteRequest.new
+# request = request.insert('nba_player_data.csv')
+# request = request.values('name' => 'Alaa Abdelnaby', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University')
+# request.run
 
 
 # request = MySqliteRequest.new
