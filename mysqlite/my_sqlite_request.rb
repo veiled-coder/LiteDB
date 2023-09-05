@@ -333,6 +333,17 @@ def merge(left, right, &block)
   result
 end
 
+
+
+# request = MySqliteRequest.new
+# request = request.delete
+# request =request.from('nba_player_data.csv')
+# request = request.where('name', 'Matt Zunic')
+# request=request.run
+
+
+
+
 # request = MySqliteRequest.new
 # request = request.update('nba_player_data.csv')
 # request = request.values('name' => 'Matt Renamed','year_start'=>'2017')

@@ -14,7 +14,7 @@ loop do
     result=''
 case query
 
-when 'exit'
+when 'quit'
     puts 'exiting sqlte cli'
     break
 when /^(\s*(SELECT|select)\s+([\w\s*,]+)\s+(FROM|from)\s+(\S+)\s*(?:(JOIN|join)\s+(\S+)\s+(on|ON)\s+(\S+))?(?:(WHERE|where)\s+(.*?))?\s*)$/
@@ -48,6 +48,11 @@ when /(?:UPDATE|update)\s+(\w+)\s+(?:SET|set)\s+(.+?)\s+(?:WHERE|where)\s+(.+)/
     where_conditions=$3
     request=runUpdateQuery(table_name,values,where_conditions).run
    
+when /^\s*(DELETE|delete)\s+(FROM|from)\s+(\w+)\s+(where|WHERE)\s+(.+)/
+
+    table_name="#{$3}.csv"
+     where_conditions=$5
+     request=runDeleteQuery(table_name,where_conditions,request).run
 
 
 else
@@ -141,6 +146,14 @@ request = processWhereConditions(where_conditions,request)
 request
 end
 
+def runDeleteQuery(table_name,where_conditions,request)
+request = MySqliteRequest.new
+request = request.delete
+request =request.from(table_name)
+request = processWhereConditions(where_conditions,request)
+request
+end
+
 def processWhereConditions(conditions,request)
     splitted_conditions=conditions.split(",")
 
@@ -154,36 +167,15 @@ def processWhereConditions(conditions,request)
     return request
 end
 MySQLite.new
+#DELETE FROM  nba_player_data WHERE name = 'John'
+
 # UPDATE nba_player_data SET name = 'Bill Renamed', year_start = '2330' WHERE name = 'Bill Zopf',year_start='1971'
 
-# request = MySqliteRequest.new
-# request = request.update('nba_player_data.csv')
-# request = request.values('name' => 'Alaa Renamed2','year_start'=>'2023')
-# request = request.where('name', 'Alaa Renamed')
-# request = request.where('year_start', '1991')
 
-# the values were received as [{"name"=>"Alaa Renamed2", "year_start"=>"2023"}]
-
-# INSERT INTO nba_player_data (name,year_start,year_end,position,height,weight,birth_date,college) VALUES (Alaa Abdelnaby34,1991,1995,F-C,6-10,240,"June 24, 1968",Duke University)
-
-
-#as a hash data is sent this way 
-#'name' => 'Alaa Abdelnaby', 'year_start' => '1991', 'year_end' => '1995', 'position' => 'F-C', 'height' => '6-10', 'weight' => '240', 'birth_date' => "June 24, 1968", 'college' => 'Duke University'    
+# INSERT INTO nba_player_data (name,year_start,year_end,position,height,weight,college) VALUES (Alaa Abdelnaby34,1991,1995,F-C,6-10,240,Duke University)
+# INSERT INTO nba_player_data VALUES (Alaa Abdelnaby34,1991,1995,F-C,6-10,240,"June 24, 1968",Duke University)
 
 
 
+#SELECT name,email FROM  nba_player_data WHERE name='Matt Zunic'
 
-
-
-# SELECT name
-# FROM table1
-# JOIN table2 ON  table1.id=table2.id
-#SELECT name,email FROM students WHERE name='Matt Zunic'
-
-# request = MySqliteRequest.new
-# request = request.from('nba_player_data.csv')
-# request=request.select('*')
-# request=request.join('weight','nba_players.csv','weight2')
-# request.run
-
-# UPDATE students SET email = 'jane@janedoe.com', blog = 'https://blog.janedoe.com' WHERE name = 'Mila'
