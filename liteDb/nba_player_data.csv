@@ -1,0 +1,9 @@
+name,year_start,year_end,position,height,weight,birth_date,college
+Ante Zizic,2018,2018,F-C,6-11,250,"January 4, 1997",
+Jimmy agabaje2,1983,1983,C,7-1,240,"December 20, 1953",Kent State University
+'Bill Renamed','2330',1971,G,6-1,170,"June 7, 1948",Duquesne University
+Bill Zopf,1972,1971,G,6-1,170,"June 7, 1948",Duquesne University
+1991,1995,F-C,6-10,240,"June 24, 1968",Duke University,
+'aisha',1991,1995,,6-10,240,"June 24, 1968",Duke University
+'aisha',1991,,,6-10,240,"June 24, 1968",Duke University
+'aisha',1991,1995,,6-10,240,"June 24, 1968",Duke University
